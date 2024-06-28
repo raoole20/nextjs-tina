@@ -1,8 +1,8 @@
 import { useTina } from "tinacms/dist/react";
 import { TinaMarkdown } from "tinacms/dist/rich-text";
-import client from "@/tina/__generated__/client";
+import client from "@/tina/__generated__/databaseClient";
 
-const BlogPage = (props) => {
+const BlogPage = (props: any) => {
   const { data } = useTina({
     query: props.query,
     variables: props.variables,
@@ -18,9 +18,9 @@ const BlogPage = (props) => {
           }}
         >
           <h1 className="text-3xl m-8 text-center leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-            {data.post?.title}
+            {data?.post?.title}
           </h1>
-          <ContentSection content={data.post?.body}></ContentSection>
+          <ContentSection content={data?.post?.body}></ContentSection>
         </div>
         <div className="bg-green-100 text-center">Custom footer</div>
       </div>
@@ -28,10 +28,11 @@ const BlogPage = (props) => {
   );
 };
 
-export const getStaticProps = async ({ params }) => {
+export const getStaticProps = async ({ params }: any) => {
   let data = {};
   let query = {};
   let variables = { relativePath: `${params.slug.join("/")}.md` };
+  console.log(params, variables)
 
   try {
     const res = await client.queries.post(variables);
@@ -53,21 +54,30 @@ export const getStaticProps = async ({ params }) => {
 };
 
 export const getStaticPaths = async () => {
-  const postsListData = await client.queries.postConnection();
+  console.log('holis')
+  let postsListData;
+  try {
+    postsListData = await client.queries.postConnection();
+    console.log(postsListData)
+    return {
+      paths: postsListData.data.postConnection.edges?.map((post) => ({
+        params: {
+          slug: post?.node?._sys.breadcrumbs,
+        },
+      })),
+      fallback: false,
+    };
+  } catch (error) {
+    console.log(error)
+    return  { paths: [], fallback: true }
+  }
 
-  return {
-    paths: postsListData.data.postConnection.edges?.map((post) => ({
-      params: {
-        slug: post?.node?._sys.breadcrumbs,
-      },
-    })),
-    fallback: false,
-  };
+  
 };
 
 export default BlogPage;
 
-const PageSection = (props) => {
+const PageSection = (props: any) => {
   return (
     <>
       <h2>{props.heading}</h2>
@@ -80,7 +90,7 @@ const components = {
   PageSection: PageSection,
 };
 
-const ContentSection = ({ content }) => {
+const ContentSection = ({ content }: any) => {
   return (
     <div className="relative py-16 bg-white overflow-hidden text-black">
       <div className="relative px-4 sm:px-6 lg:px-8">
